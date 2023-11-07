@@ -57,7 +57,7 @@ def main():
     parser = ArgumentParser()
 
     parser.add_argument("--dana-url", type=str, required=True)
-    parser.add_argument("--dana-datset-id", type=str, required=True)
+    parser.add_argument("--dana-dataset-id", type=str, required=True)
 
     args = parser.parse_args()
 
