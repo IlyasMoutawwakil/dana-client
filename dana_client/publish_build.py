@@ -11,16 +11,8 @@ import pandas as pd
 
 from .base import LOGGER, authenticate, add_new_sample, add_new_build, add_new_series
 
-HF_TOKEN = os.environ.get("HF_TOKEN", None)
-API_TOKEN = os.environ.get("API_TOKEN", None)
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
 
-AVERAGE_MIN_COUNT = 3  # 3 samples
-AVERAGE_RANGE = 5  # 5 percent
-
-
-def publish_new_build(
+def publish_build(
     session: Session,
     dana_url: str,
     api_token: str,
@@ -28,12 +20,14 @@ def publish_new_build(
     build_id: int,
     build_info: dict,
     build_folder: Path,
+    average_range: int = 5,
+    average_min_count: int = 3,
 ) -> None:
     LOGGER.info(f" + Publishing build {build_id}")
     add_new_build(
         session=session,
         dana_url=dana_url,
-        api_token=API_TOKEN,
+        api_token=api_token,
         project_id=project_id,
         build_id=build_id,
         build_url=build_info["build_url"],
@@ -72,8 +66,8 @@ def publish_new_build(
             series_id=series_id,
             series_description=series_description,
             better_criterion="smaller",
-            average_range=AVERAGE_RANGE,
-            average_min_count=AVERAGE_MIN_COUNT,
+            average_range=average_range,
+            average_min_count=average_min_count,
             override=True,
         )
 
@@ -105,8 +99,8 @@ def publish_new_build(
                 series_id=series_id,
                 series_description=series_description,
                 better_criterion="smaller",
-                average_range=AVERAGE_RANGE,
-                average_min_count=AVERAGE_MIN_COUNT,
+                average_range=average_range,
+                average_min_count=average_min_count,
                 override=True,
             )
 
@@ -138,8 +132,8 @@ def publish_new_build(
                 series_id=series_id,
                 series_description=series_description,
                 better_criterion="higher",
-                average_range=AVERAGE_RANGE,
-                average_min_count=AVERAGE_MIN_COUNT,
+                average_range=average_range,
+                average_min_count=average_min_count,
                 override=True,
             )
 
@@ -156,7 +150,7 @@ def publish_new_build(
             )
 
 
-def upload_new_build(
+def upload_build(
     dana_dataset_id: str,
     hf_token: str,
     project_id: str,
@@ -200,7 +194,6 @@ def main():
 
     dana_url = args.dana_url
     dana_dataset_id = args.dana_dataset_id
-
     build_folder = args.build_folder
     project_id = args.project_id
     build_id = args.build_id
@@ -214,6 +207,13 @@ def main():
         "build_url": args.build_url,
     }
 
+    AVERAGE_RANGE = 5  # 5 percent
+    AVERAGE_MIN_COUNT = 3  # 3 samples
+    HF_TOKEN = os.environ.get("HF_TOKEN", None)
+    API_TOKEN = os.environ.get("API_TOKEN", None)
+    ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
+
     session = Session()
 
     LOGGER.info(" + Authenticating to DANA dashboard")
@@ -225,8 +225,18 @@ def main():
         auth_token=HF_TOKEN,
     )
 
+    LOGGER.info(" + Uploading benchmark to HF dataset")
+    upload_build(
+        dana_dataset_id=dana_dataset_id,
+        hf_token=HF_TOKEN,
+        project_id=project_id,
+        build_id=build_id,
+        build_info=build_info,
+        build_folder=build_folder,
+    )
+
     LOGGER.info(" + Publishing benchmark to DANA server")
-    publish_new_build(
+    publish_build(
         session=session,
         dana_url=dana_url,
         api_token=API_TOKEN,
@@ -234,14 +244,6 @@ def main():
         build_id=build_id,
         build_info=build_info,
         build_folder=build_folder,
-    )
-
-    LOGGER.info(" + Uploading benchmark to HF dataset")
-    upload_new_build(
-        dana_dataset_id=dana_dataset_id,
-        hf_token=HF_TOKEN,
-        project_id=project_id,
-        build_id=build_id,
-        build_info=build_info,
-        build_folder=build_folder,
+        average_range=AVERAGE_RANGE,
+        average_min_count=AVERAGE_MIN_COUNT,
     )

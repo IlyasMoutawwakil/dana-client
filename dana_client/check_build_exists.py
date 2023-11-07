@@ -4,11 +4,6 @@ from argparse import ArgumentParser
 
 from .base import authenticate, get_project, get_build
 
-HF_TOKEN = os.environ.get("HF_TOKEN", None)
-API_TOKEN = os.environ.get("API_TOKEN", None)
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
-
 
 def main():
     parser = ArgumentParser()
@@ -22,6 +17,11 @@ def main():
     dana_url = args.dana_url
     project_id = args.project_id
     build_id = args.build_id
+
+    HF_TOKEN = os.environ.get("HF_TOKEN", None)
+    API_TOKEN = os.environ.get("API_TOKEN", None)
+    ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
 
     session = Session()
 
