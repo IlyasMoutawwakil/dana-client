@@ -150,36 +150,14 @@ def publish_build(
             )
 
 
-def upload_build(
-    dana_dataset_id: str,
-    hf_token: str,
-    project_id: str,
-    build_id: int,
-    build_info: dict,
-    build_folder: Path,
-) -> None:
-    LOGGER.info(" + Saving build info")
-    with open(build_folder / "build_info.json", "w") as f:
-        json.dump(build_info, f)
-
-    LOGGER.info(" + Uploading experiments folder")
-    HfApi().upload_folder(
-        repo_id=dana_dataset_id,
-        folder_path=build_folder,  # path to the folder you want to upload
-        path_in_repo=f"{project_id}/{build_id}",
-        delete_patterns="*",  # to rewrite the folder
-        repo_type="dataset",
-        token=hf_token,
-    )
-
-
 def main():
     parser = ArgumentParser()
+
+    parser.add_argument("--build-folder", type=Path, required=True)
 
     parser.add_argument("--dana-url", type=str, required=True)
     parser.add_argument("--dana-dataset-id", type=str, required=True)
 
-    parser.add_argument("--build-folder", type=Path, required=True)
     parser.add_argument("--project-id", type=str, required=True)
     parser.add_argument("--build-id", type=int, required=True)
 
@@ -226,13 +204,18 @@ def main():
     )
 
     LOGGER.info(" + Uploading benchmark to HF dataset")
-    upload_build(
-        dana_dataset_id=dana_dataset_id,
-        hf_token=HF_TOKEN,
-        project_id=project_id,
-        build_id=build_id,
-        build_info=build_info,
-        build_folder=build_folder,
+    LOGGER.info(" + Saving build info")
+    with open(build_folder / "build_info.json", "w") as f:
+        json.dump(build_info, f)
+
+    LOGGER.info(" + Uploading experiments folder")
+    HfApi().upload_folder(
+        repo_id=dana_dataset_id,
+        folder_path=build_folder,  # path to the folder you want to upload
+        path_in_repo=f"{project_id}/{build_id}",
+        delete_patterns="*",  # to rewrite the folder
+        repo_type="dataset",
+        token=HF_TOKEN,
     )
 
     LOGGER.info(" + Publishing benchmark to DANA server")

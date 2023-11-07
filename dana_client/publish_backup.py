@@ -10,49 +10,6 @@ from .base import LOGGER, authenticate, add_new_project
 from .publish_build import publish_build
 
 
-def publish_backup(
-    session: Session,
-    dana_url: str,
-    api_token: str,
-    backup_path: Path,
-) -> None:
-    for project_path in backup_path.iterdir():
-        if not project_path.is_dir():
-            continue
-
-        project_id = project_path.name
-        project_info = json.load(open(project_path / "project_info.json"))
-
-        add_new_project(
-            session=session,
-            dana_url=dana_url,
-            api_token=api_token,
-            project_id=project_id,
-            users=project_info["users"],
-            project_description=project_info["project_description"],
-            override=True,
-        )
-
-        for build_path in project_path.iterdir():
-            if not build_path.is_dir():
-                continue
-
-            LOGGER.info(f" + Getting build info from {build_path / 'build_info.json'}")
-            build_info = json.load(open(build_path / "build_info.json"))
-
-            build_id = int(build_path.name)
-            LOGGER.info(f" + Publishing build {build_id}")
-            publish_build(
-                session=session,
-                dana_url=dana_url,
-                api_token=api_token,
-                project_id=project_id,
-                build_id=build_id,
-                build_info=build_info,
-                build_folder=build_path,
-            )
-
-
 def main():
     parser = ArgumentParser()
 
@@ -89,10 +46,40 @@ def main():
     )
 
     LOGGER.info("Publishing backup dataset")
-    publish_backup(
-        session=session,
-        dana_url=dana_url,
-        api_token=API_TOKEN,
-        backup_path=dataset_path,
-    )
+    for project_path in dana_dataset_id.iterdir():
+        if not project_path.is_dir():
+            continue
+
+        project_id = project_path.name
+        project_info = json.load(open(project_path / "project_info.json"))
+
+        add_new_project(
+            session=session,
+            dana_url=dana_url,
+            api_token=API_TOKEN,
+            project_id=project_id,
+            users=project_info["users"],
+            project_description=project_info["project_description"],
+            override=True,
+        )
+
+        for build_path in project_path.iterdir():
+            if not build_path.is_dir():
+                continue
+
+            LOGGER.info(f" + Getting build info from {build_path / 'build_info.json'}")
+            build_info = json.load(open(build_path / "build_info.json"))
+
+            build_id = int(build_path.name)
+            LOGGER.info(f" + Publishing build {build_id}")
+            publish_build(
+                session=session,
+                dana_url=dana_url,
+                api_token=API_TOKEN,
+                project_id=project_id,
+                build_id=build_id,
+                build_info=build_info,
+                build_folder=build_path,
+            )
+
     LOGGER.info("Finished publishing backup dataset")

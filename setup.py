@@ -15,9 +15,10 @@ setup(
     install_requires=INSTALL_REQUIRES,
     entry_points={
         "console_scripts": [
-            "check-build-exists=dana_client.check_build_exists:main",
+            "build-exists=dana_client.build_exists:main",
             "publish-build=dana_client.publish_build:main",
             "publish-backup=dana_client.publish_backup:main",
+            "update-project=dana_client.update_project:main",
         ],
     },
 )
