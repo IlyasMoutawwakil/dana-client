@@ -42,7 +42,7 @@ def main():
         # checl if build exists
         out = subprocess.run(
             [
-                "check-build-exists",
+                "build-exists",
                 "--dana-url",
                 dana_url,
                 "--project-id",
