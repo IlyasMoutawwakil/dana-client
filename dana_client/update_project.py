@@ -13,7 +13,7 @@ def main():
     parser.add_argument("--dana-dataset-id", type=str, required=True)
     parser.add_argument("--project-id", type=str, required=True)
     parser.add_argument("--watch-repo", type=str, required=True)
-    parser.add_argument("--num-commits", type=int, default=10)
+    parser.add_argument("--num-commits", type=int, required=True)
 
     args = parser.parse_args()
 
