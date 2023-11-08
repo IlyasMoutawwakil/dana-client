@@ -200,7 +200,7 @@ def main():
         dana_url=dana_url,
         username=ADMIN_USERNAME,
         password=ADMIN_PASSWORD,
-        auth_token=HF_TOKEN,
+        api_token=API_TOKEN,
     )
 
     LOGGER.info(" + Uploading benchmark to HF dataset")

@@ -16,18 +16,14 @@ def authenticate(
     dana_url: str,
     username: str,
     password: str,
-    auth_token: Optional[str] = None,
+    api_token: Optional[str] = None,
 ) -> Session:
     session.post(
         f"{dana_url}/login",
         data=json.dumps({"username": username, "password": password}),
         headers={
             "Content-Type": "application/json",
-            **(
-                {"Authorization": f"Bearer {auth_token}"}
-                if auth_token is not None
-                else {}
-            ),
+            "Authorization": f"Bearer {api_token}",
         },
     )
 
@@ -55,6 +51,7 @@ def post_to_dana(
     LOGGER.info(f"API response code: {code}")
 
     if code != 200:
+        print(response.text)
         raise RuntimeError("API request failed")
 
 

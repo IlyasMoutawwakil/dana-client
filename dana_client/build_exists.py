@@ -18,7 +18,6 @@ def main():
     project_id = args.project_id
     build_id = args.build_id
 
-    HF_TOKEN = os.environ.get("HF_TOKEN", None)
     API_TOKEN = os.environ.get("API_TOKEN", None)
     ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
@@ -30,7 +29,7 @@ def main():
         dana_url=dana_url,
         username=ADMIN_USERNAME,
         password=ADMIN_PASSWORD,
-        auth_token=HF_TOKEN,
+        api_token=API_TOKEN,
     )
 
     _ = get_project(
