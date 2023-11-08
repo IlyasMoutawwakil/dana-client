@@ -124,7 +124,7 @@ def publish_build(
         if "generate.throughput(tokens/s)" in inference_results[0]:
             throughput_tok_s = inference_results[0]["generate.throughput(tokens/s)"]
 
-            series_id = f"{series_foler.name}_throughput(tokens/s)"
+            series_id = f"{series_foler.name}_throughput(tokens.s-1)"
             LOGGER.info(f"\t+ Publishing series {series_id}")
             add_new_series(
                 session=session,
