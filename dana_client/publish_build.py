@@ -132,7 +132,7 @@ def publish_build(
                 api_token=api_token,
                 project_id=project_id,
                 series_id=series_id,
-                series_unit="",
+                series_unit="ns",
                 series_description=series_description,
                 benchmark_range=average_range,
                 benchmark_required=average_min_count,
