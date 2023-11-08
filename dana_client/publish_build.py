@@ -23,7 +23,7 @@ def publish_build(
     average_range: int = 5,
     average_min_count: int = 3,
 ) -> None:
-    LOGGER.info(f" + Publishing build {build_id}")
+    LOGGER.info(f"\t + Publishing build {build_id}")
     add_new_build(
         session=session,
         dana_url=dana_url,
@@ -46,7 +46,7 @@ def publish_build(
         inference_results = list(series_foler.glob("*/inference_results.csv"))
 
         if len(inference_results) != 1 or len(configs) != 1:
-            LOGGER.info(f" + Skipping {series_foler.name}")
+            LOGGER.info(f"\t\t + Skipping {series_foler.name}")
             shutil.rmtree(series_foler)
             continue
 
@@ -57,7 +57,7 @@ def publish_build(
         latency_ms = inference_results[0]["forward.latency(s)"] * 1000
 
         series_id = f"{series_foler.name}_latency(ms)"
-        LOGGER.info(f"\t + Publishing series {series_id}")
+        LOGGER.info(f"\t\t + Publishing series {series_id}")
         add_new_series(
             session=session,
             api_token=api_token,
@@ -72,9 +72,7 @@ def publish_build(
             override=True,
         )
 
-        LOGGER.info(
-            f"\t + Publishing sample for series {series_id} and build {build_id}"
-        )
+        LOGGER.info(f"\t\t + Publishing sample for series {series_id}")
         add_new_sample(
             session=session,
             dana_url=dana_url,
@@ -106,9 +104,7 @@ def publish_build(
                 override=True,
             )
 
-            LOGGER.info(
-                f"\t + Publishing sample for series {series_id} and build {build_id}"
-            )
+            LOGGER.info(f"\t + Publishing sample for series {series_id}")
             add_new_sample(
                 session=session,
                 dana_url=dana_url,
@@ -197,7 +193,7 @@ def main():
 
     session = Session()
 
-    LOGGER.info(" + Authenticating to DANA dashboard")
+    LOGGER.info("Authenticating to DANA dashboard")
     authenticate(
         session=session,
         dana_url=dana_url,
@@ -206,12 +202,11 @@ def main():
         api_token=API_TOKEN,
     )
 
-    LOGGER.info(" + Uploading benchmark to HF dataset")
-    LOGGER.info(" + Saving build info")
+    LOGGER.info("Saving build info")
     with open(build_folder / "build_info.json", "w") as f:
         json.dump(build_info, f)
 
-    LOGGER.info(" + Uploading experiments folder")
+    LOGGER.info("Uploading build folder to HuggingFace Hub")
     HfApi().upload_folder(
         repo_id=dana_dataset_id,
         folder_path=build_folder,  # path to the folder you want to upload
@@ -221,7 +216,7 @@ def main():
         token=HF_TOKEN,
     )
 
-    LOGGER.info(" + Publishing benchmark to DANA server")
+    LOGGER.info("Publishing build to DANA server")
     publish_build(
         session=session,
         dana_url=dana_url,

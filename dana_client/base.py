@@ -14,9 +14,9 @@ coloredlogs.install(level="INFO", logger=LOGGER)
 def authenticate(
     session: Session,
     dana_url: str,
+    api_token: str,
     username: str,
     password: str,
-    api_token: Optional[str] = None,
 ) -> Session:
     session.post(
         f"{dana_url}/login",
@@ -48,38 +48,10 @@ def post_to_dana(
     )
 
     code = response.status_code
-    LOGGER.info(f"API response code: {code}")
 
     if code != 200:
-        print(response.text)
+        LOGGER.error(f"API response code: {code}")
         raise RuntimeError("API request failed")
-
-
-def get_from_dana(
-    session: Session,
-    dana_url: str,
-    api_token: str,
-    payload: Dict[str, Any],
-) -> None:
-    data = json.dumps(payload)
-
-    response = session.get(
-        dana_url,
-        data=data,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_token}",
-        },
-    )
-
-    code = response.status_code
-    LOGGER.info(f"API response code: {code}")
-
-    if code != 200:
-        print(response.text)
-        raise RuntimeError("API request failed")
-
-    return response.json()
 
 
 def add_new_project(
@@ -105,25 +77,6 @@ def add_new_project(
         api_token=api_token,
         payload=project_payload,
     )
-
-
-def get_project(
-    session: Session,
-    dana_url: str,
-    api_token: str,
-    project_id: str,
-) -> None:
-    dana_project_url = f"{dana_url}/apis/getBuild"
-    project_payload = {"projectId": project_id, "buildId": 0}
-
-    project = get_from_dana(
-        session=session,
-        dana_url=dana_project_url,
-        api_token=api_token,
-        payload=project_payload,
-    )
-
-    return project
 
 
 def add_new_build(
@@ -163,29 +116,6 @@ def add_new_build(
         api_token=api_token,
         payload=build_payload,
     )
-
-
-def get_build(
-    session: Session,
-    dana_url: str,
-    api_token: str,
-    project_id: str,
-    build_id: str,
-) -> None:
-    dana_build_url = f"{dana_url}/apis/getBuild"
-    build_payload = {"projectId": project_id, "buildId": build_id}
-
-    build = get_from_dana(
-        session=session,
-        dana_url=dana_build_url,
-        api_token=api_token,
-        payload=build_payload,
-    )
-
-    if len(build) == 0:
-        raise RuntimeError(f"Build {build_id} does not exist")
-
-    return build
 
 
 def add_new_series(
@@ -251,3 +181,71 @@ def add_new_sample(
         api_token=api_token,
         payload=sample_payload,
     )
+
+
+def get_from_dana(
+    session: Session,
+    dana_url: str,
+    api_token: str,
+    payload: Dict[str, Any],
+) -> Dict[str, Any]:
+    data = json.dumps(payload)
+    response = session.get(
+        dana_url,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_token}",
+        },
+    )
+
+    code = response.status_code
+
+    if code != 200:
+        LOGGER.info(f"API response code: {code}")
+        raise RuntimeError("API request failed")
+
+    return response.json()
+
+
+def get_project(
+    session: Session,
+    dana_url: str,
+    api_token: str,
+    project_id: str,
+) -> None:
+    dana_project_url = f"{dana_url}/apis/getBuild"
+    project_payload = {"projectId": project_id, "buildId": 0}
+
+    try:
+        _ = get_from_dana(
+            session=session,
+            dana_url=dana_project_url,
+            api_token=api_token,
+            payload=project_payload,
+        )
+    except RuntimeError:
+        LOGGER.error(f"Project {project_id} does not exist")
+        raise RuntimeError(f"Project {project_id} does not exist")
+
+
+def get_build(
+    session: Session,
+    dana_url: str,
+    api_token: str,
+    project_id: str,
+    build_id: str,
+) -> None:
+    dana_build_url = f"{dana_url}/apis/getBuild"
+    build_payload = {"projectId": project_id, "buildId": build_id}
+
+    build = get_from_dana(
+        session=session,
+        dana_url=dana_build_url,
+        api_token=api_token,
+        payload=build_payload,
+    )
+
+    if len(build) == 0:
+        LOGGER.error(f"Build {build_id} does not exist")
+        raise RuntimeError(f"Build {build_id} does not exist")

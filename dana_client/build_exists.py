@@ -32,14 +32,14 @@ def main():
         api_token=API_TOKEN,
     )
 
-    _ = get_project(
+    get_project(
         session=session,
         dana_url=dana_url,
         api_token=API_TOKEN,
         project_id=project_id,
     )
 
-    _ = get_build(
+    get_build(
         session=session,
         dana_url=dana_url,
         api_token=API_TOKEN,

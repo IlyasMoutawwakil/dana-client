@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from pathlib import Path
 from requests import Session
 from argparse import ArgumentParser
@@ -27,16 +28,16 @@ def main():
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
 
     session = Session()
-    LOGGER.info(" + Authenticating")
+    LOGGER.info(f"Authenticating to {dana_url}")
     authenticate(
         session=session,
         dana_url=dana_url,
+        api_token=API_TOKEN,
         username=ADMIN_USERNAME,
         password=ADMIN_PASSWORD,
-        api_token=API_TOKEN,
     )
 
-    LOGGER.info("Downloading backup dataset")
+    LOGGER.info(f"Downloading dataset {dana_dataset_id}")
     dataset_path = Path(
         snapshot_download(
             repo_id=dana_dataset_id,
@@ -44,22 +45,18 @@ def main():
             token=HF_TOKEN,
         )
     )
-
-    LOGGER.info("Publishing backup dataset")
-    for project_path in dana_dataset_id.iterdir():
+    LOGGER.info(f"Found projects {list(dataset_path.iterdir())}")
+    for project_path in dataset_path.iterdir():
         if not project_path.is_dir():
             continue
 
         project_id = project_path.name
-        project_info = json.load(open(project_path / "project_info.json"))
-
+        LOGGER.info(f" + Adding project {project_id}")
         add_new_project(
             session=session,
             dana_url=dana_url,
             api_token=API_TOKEN,
             project_id=project_id,
-            users=project_info["users"],
-            project_description=project_info["project_description"],
             override=True,
         )
 
@@ -67,11 +64,9 @@ def main():
             if not build_path.is_dir():
                 continue
 
-            LOGGER.info(f" + Getting build info from {build_path / 'build_info.json'}")
-            build_info = json.load(open(build_path / "build_info.json"))
-
             build_id = int(build_path.name)
-            LOGGER.info(f" + Publishing build {build_id}")
+            LOGGER.info(f"\t + Publishing build {build_id}")
+            build_info = json.load(open(build_path / "build_info.json"))
             publish_build(
                 session=session,
                 dana_url=dana_url,
@@ -82,4 +77,4 @@ def main():
                 build_folder=build_path,
             )
 
-    LOGGER.info("Finished publishing backup dataset")
+    LOGGER.info("Done!")
