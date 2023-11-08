@@ -196,7 +196,7 @@ def add_new_series(
     series_unit: str,
     benchmark_range: int,
     benchmark_required: int,
-    benchmark_trend: str = "lower",
+    benchmark_trend: str = "smaller",
     series_description: Optional[str] = None,
     override: bool = False,
 ) -> None:

@@ -64,10 +64,11 @@ def publish_build(
             dana_url=dana_url,
             project_id=project_id,
             series_id=series_id,
+            series_unit="ms",
             series_description=series_description,
-            better_criterion="smaller",
-            average_range=average_range,
-            average_min_count=average_min_count,
+            benchmark_range=average_range,
+            benchmark_required=average_min_count,
+            benchmark_trend="smaller",
             override=True,
         )
 
@@ -97,10 +98,11 @@ def publish_build(
                 api_token=api_token,
                 project_id=project_id,
                 series_id=series_id,
+                series_unit="mbytes",
                 series_description=series_description,
-                better_criterion="smaller",
-                average_range=average_range,
-                average_min_count=average_min_count,
+                benchmark_range=average_range,
+                benchmark_required=average_min_count,
+                benchmark_trend="smaller",
                 override=True,
             )
 
@@ -130,10 +132,11 @@ def publish_build(
                 api_token=api_token,
                 project_id=project_id,
                 series_id=series_id,
+                series_unit="",
                 series_description=series_description,
-                better_criterion="higher",
-                average_range=average_range,
-                average_min_count=average_min_count,
+                benchmark_range=average_range,
+                benchmark_required=average_min_count,
+                benchmark_trend="higher",
                 override=True,
             )
 
