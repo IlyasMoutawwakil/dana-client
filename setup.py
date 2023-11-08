@@ -4,6 +4,7 @@ from setuptools import find_packages, setup
 INSTALL_REQUIRES = [
     "huggingface_hub",
     "coloredlogs",
+    "GitPython",
     "omegaconf",
     "pandas",
 ]
