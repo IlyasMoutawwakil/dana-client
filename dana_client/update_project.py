@@ -39,7 +39,7 @@ def main():
         build_url = f"{watch_repo}/commit/{commit}"
         build_id = str(commit.count())
 
-        # checl if build exists
+        # check if build exists
         out = subprocess.run(
             [
                 "build-exists",
@@ -50,11 +50,10 @@ def main():
                 "--build-id",
                 build_id,
             ],
-            capture_output=True,
         )
 
         if out.returncode == 0:
-            print(f"Build {build_id} already exists, skipping...")
+            print(f"Build {build_id} already exists, skipping")
             continue
 
         # checkout the commit
