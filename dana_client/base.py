@@ -76,6 +76,7 @@ def get_from_dana(
     LOGGER.info(f"API response code: {code}")
 
     if code != 200:
+        print(response.text)
         raise RuntimeError("API request failed")
 
     return response.json()
@@ -112,7 +113,7 @@ def get_project(
     api_token: str,
     project_id: str,
 ) -> None:
-    dana_project_url = f"{dana_url}/apis/getProject"
+    dana_project_url = f"{dana_url}/apis/getBuild"
     project_payload = {"projectId": project_id, "buildId": 0}
 
     project = get_from_dana(
@@ -182,7 +183,7 @@ def get_build(
     )
 
     if len(build) == 0:
-        raise RuntimeError(f"Failed to get build {build_id}")
+        raise RuntimeError(f"Build {build_id} does not exist")
 
     return build
 
