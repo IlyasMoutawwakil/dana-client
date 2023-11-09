@@ -20,7 +20,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v3
 
-      - name: Set up API
+      - name: Set up Dana Server
         run: |
           git clone https://github.com/IlyasMoutawwakil/dana-server.git
           cd dana-server
@@ -37,7 +37,7 @@ jobs:
           pip install pytest
           pip install -e .
 
-      -name: Run test benchmark
+      - name: Run test benchmark
         run: optimum-benchmark --config-dir tests --config-name config --multirun
 
       - name: Run API tests
