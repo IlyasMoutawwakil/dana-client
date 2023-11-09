@@ -1,80 +1,89 @@
 import os
 import json
-import logging
 from pathlib import Path
 from requests import Session
 from argparse import ArgumentParser
 
 from huggingface_hub import snapshot_download
 
-from .base import LOGGER, authenticate, add_new_project
+from .api import login
 from .publish_build import publish_build
+
+
+def publish_backup(
+    url: str,
+    session: Session,
+    hf_token: str,
+    api_token: str,
+    dataset_id: str,
+):
+    """
+    Publishes a backup dataset to DANA server.
+    """
+
+    dataset_path = Path(
+        snapshot_download(
+            repo_id=dataset_id,
+            repo_type="dataset",
+            token=hf_token,
+        )
+    )
+    for project_path in dataset_path.iterdir():
+        if not project_path.is_dir():
+            continue
+        for build_path in project_path.iterdir():
+            if not build_path.is_dir():
+                continue
+
+            project_id = project_path.name
+            build_id = int(build_path.name)
+
+            build_info = json.load(open(build_path / "build_info.json"))
+            publish_build(
+                folder=build_path,
+                url=url,
+                token=api_token,
+                session=session,
+                project_id=project_id,
+                build_id=build_id,
+                build_url=build_info["build_url"],
+                build_hash=build_info["build_hash"],
+                build_subject=build_info["build_subject"],
+                build_abbrev_hash=build_info["build_abbrev_hash"],
+                build_author_name=build_info["build_author_name"],
+                build_author_email=build_info["build_author_email"],
+                average_range="5%",
+                average_min_count=3,
+            )
 
 
 def main():
     parser = ArgumentParser()
 
-    parser.add_argument("--dana-url", type=str, required=True)
-    parser.add_argument("--dana-dataset-id", type=str, required=True)
+    parser.add_argument("--url", type=str, required=True)
+    parser.add_argument("--dataset-id", type=str, required=True)
 
     args = parser.parse_args()
 
-    dana_url = args.dana_url
-    dana_dataset_id = args.dana_dataset_id
+    url = args.url
+    dataset_id = args.dataset_id
 
     HF_TOKEN = os.environ.get("HF_TOKEN", None)
     API_TOKEN = os.environ.get("API_TOKEN", None)
     ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
 
-    session = Session()
-    LOGGER.info(f"Authenticating to {dana_url}")
-    authenticate(
-        session=session,
-        dana_url=dana_url,
+    session = login(
+        url=url,
         api_token=API_TOKEN,
         username=ADMIN_USERNAME,
         password=ADMIN_PASSWORD,
     )
 
-    LOGGER.info(f"Downloading dataset {dana_dataset_id}")
-    dataset_path = Path(
-        snapshot_download(
-            repo_id=dana_dataset_id,
-            repo_type="dataset",
-            token=HF_TOKEN,
-        )
+    publish_backup(
+        url=url,
+        session=session,
+        hf_token=HF_TOKEN,
+        api_token=API_TOKEN,
+        dataset_id=dataset_id,
     )
-    LOGGER.info(f"Found projects {list(dataset_path.iterdir())}")
-    for project_path in dataset_path.iterdir():
-        if not project_path.is_dir():
-            continue
-
-        project_id = project_path.name
-        LOGGER.info(f" + Adding project {project_id}")
-        add_new_project(
-            session=session,
-            dana_url=dana_url,
-            api_token=API_TOKEN,
-            project_id=project_id,
-            override=True,
-        )
-
-        for build_path in project_path.iterdir():
-            if not build_path.is_dir():
-                continue
-
-            build_id = int(build_path.name)
-            LOGGER.info(f"\t + Publishing build {build_id}")
-            build_info = json.load(open(build_path / "build_info.json"))
-            publish_build(
-                session=session,
-                dana_url=dana_url,
-                api_token=API_TOKEN,
-                project_id=project_id,
-                build_id=build_id,
-                build_info=build_info,
-                build_folder=build_path,
-            )
-
-    LOGGER.info("Done!")

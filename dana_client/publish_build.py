@@ -1,67 +1,83 @@
 import os
-import json
-import shutil
 from pathlib import Path
 from requests import Session
 from argparse import ArgumentParser
 
-from huggingface_hub import HfApi
 from omegaconf import OmegaConf
 import pandas as pd
 
-from .base import LOGGER, authenticate, add_new_sample, add_new_build, add_new_series
+from .api import login, add_project, add_build, add_series, add_sample, project_exists
 
 
 def publish_build(
+    url: str,
     session: Session,
-    dana_url: str,
     api_token: str,
+    folder: Path,
     project_id: str,
     build_id: int,
-    build_info: dict,
-    build_folder: Path,
-    average_range: int = 5,
+    build_url: str = "",
+    build_hash: str = "",
+    build_abbrev_hash: str = "",
+    build_author_name: str = "",
+    build_author_email: str = "",
+    build_subject: str = "",
+    average_range: str = "5%",
     average_min_count: int = 3,
 ) -> None:
-    LOGGER.info(f"\t + Publishing build {build_id}")
-    add_new_build(
+    p_exists = project_exists(
         session=session,
-        dana_url=dana_url,
+        url=url,
+        api_token=api_token,
+        project_id=project_id,
+    )
+    if not p_exists:
+        add_project(
+            session=session,
+            url=url,
+            api_token=api_token,
+            project_id=project_id,
+            users="",
+            project_description="",
+            override=True,
+        )
+
+    add_build(
+        session=session,
+        url=url,
         api_token=api_token,
         project_id=project_id,
         build_id=build_id,
-        build_url=build_info["build_url"],
-        build_hash=build_info["build_hash"],
-        build_abbrev_hash=build_info["build_abbrev_hash"],
-        build_author_name=build_info["build_author_name"],
-        build_author_email=build_info["build_author_email"],
-        build_subject=build_info["build_subject"],
+        build_url=build_url,
+        build_hash=build_hash,
+        build_subject=build_subject,
+        build_abbrev_hash=build_abbrev_hash,
+        build_author_name=build_author_name,
+        build_author_email=build_author_email,
         override=True,
     )
-    for series_foler in build_folder.iterdir():
-        if not series_foler.is_dir():
+    for benchmark_foler in folder.iterdir():
+        if not benchmark_foler.is_dir():
             continue
 
-        configs = list(series_foler.glob("*/hydra_config.yaml"))
-        inference_results = list(series_foler.glob("*/inference_results.csv"))
+        inference_results = list(benchmark_foler.glob("**/inference_results.csv"))
+        hydra_config = list(benchmark_foler.glob("**/hydra_config.yaml"))
 
-        if len(inference_results) != 1 or len(configs) != 1:
-            LOGGER.info(f"\t\t + Skipping {series_foler.name}")
-            shutil.rmtree(series_foler)
+        if len(inference_results) != 1 or len(hydra_config) != 1:
             continue
 
-        series_description = OmegaConf.to_yaml(OmegaConf.load(configs[0]))
         inference_results = pd.read_csv(inference_results[0]).to_dict(orient="records")
+        series_description = OmegaConf.to_yaml(OmegaConf.load(hydra_config[0])).replace(
+            "\n", "<br>"
+        )
 
         # Latency series
         latency_ms = inference_results[0]["forward.latency(s)"] * 1000
-
-        series_id = f"{series_foler.name}_latency(ms)"
-        LOGGER.info(f"\t\t + Publishing series {series_id}")
-        add_new_series(
+        series_id = f"{benchmark_foler.name}_latency(ms)"
+        add_series(
             session=session,
             api_token=api_token,
-            dana_url=dana_url,
+            url=url,
             project_id=project_id,
             series_id=series_id,
             series_unit="ms",
@@ -72,15 +88,15 @@ def publish_build(
             override=True,
         )
 
-        LOGGER.info(f"\t\t + Publishing sample for series {series_id}")
-        add_new_sample(
+        add_sample(
             session=session,
-            dana_url=dana_url,
+            url=url,
             api_token=api_token,
             project_id=project_id,
             build_id=build_id,
             series_id=series_id,
             sample_value=latency_ms,
+            sample_unit="ms",
             override=True,
         )
 
@@ -88,11 +104,10 @@ def publish_build(
         if "forward.peak_memory(MB)" in inference_results[0]:
             memory_mb = inference_results[0]["forward.peak_memory(MB)"]
 
-            series_id = f"{series_foler.name}_memory(MB)"
-            LOGGER.info(f"\t + Publishing series {series_id}")
-            add_new_series(
+            series_id = f"{benchmark_foler.name}_memory(mbytes)"
+            add_series(
                 session=session,
-                dana_url=dana_url,
+                url=url,
                 api_token=api_token,
                 project_id=project_id,
                 series_id=series_id,
@@ -103,16 +118,15 @@ def publish_build(
                 benchmark_trend="smaller",
                 override=True,
             )
-
-            LOGGER.info(f"\t + Publishing sample for series {series_id}")
-            add_new_sample(
+            add_sample(
                 session=session,
-                dana_url=dana_url,
+                url=url,
                 api_token=api_token,
                 project_id=project_id,
                 build_id=build_id,
                 series_id=series_id,
                 sample_value=memory_mb,
+                sample_unit="mbytes",
                 override=True,
             )
 
@@ -120,15 +134,14 @@ def publish_build(
         if "generate.throughput(tokens/s)" in inference_results[0]:
             throughput_tok_s = inference_results[0]["generate.throughput(tokens/s)"]
 
-            series_id = f"{series_foler.name}_throughput(tokens.s-1)"
-            LOGGER.info(f"\t+ Publishing series {series_id}")
-            add_new_series(
+            series_id = f"{benchmark_foler.name}_throughput(tokens)"
+            add_series(
                 session=session,
-                dana_url=dana_url,
+                url=url,
                 api_token=api_token,
                 project_id=project_id,
                 series_id=series_id,
-                series_unit="ns",
+                series_unit="tokens",
                 series_description=series_description,
                 benchmark_range=average_range,
                 benchmark_required=average_min_count,
@@ -136,15 +149,15 @@ def publish_build(
                 override=True,
             )
 
-            LOGGER.info(f"\t+ Publishing sample for series {series_id}")
-            add_new_sample(
+            add_sample(
                 session=session,
-                dana_url=dana_url,
+                url=url,
                 api_token=api_token,
                 project_id=project_id,
                 build_id=build_id,
                 series_id=series_id,
                 sample_value=throughput_tok_s,
+                sample_unit="tokens",
                 override=True,
             )
 
@@ -152,79 +165,64 @@ def publish_build(
 def main():
     parser = ArgumentParser()
 
-    parser.add_argument("--build-folder", type=Path, required=True)
+    parser.add_argument("--folder", type=Path, required=True)
 
-    parser.add_argument("--dana-url", type=str, required=True)
-    parser.add_argument("--dana-dataset-id", type=str, required=True)
-
+    parser.add_argument("--url", type=str, required=True)
     parser.add_argument("--project-id", type=str, required=True)
     parser.add_argument("--build-id", type=int, required=True)
 
-    parser.add_argument("--build-hash", type=str, required=True)
-    parser.add_argument("--build-abbrev-hash", type=str, required=True)
-    parser.add_argument("--build-author-name", type=str, required=True)
-    parser.add_argument("--build-author-email", type=str, required=True)
-    parser.add_argument("--build-subject", type=str, required=True)
-    parser.add_argument("--build-url", type=str, required=True)
+    parser.add_argument("--build-url", type=str, default="")
+    parser.add_argument("--build-hash", type=str, default="")
+    parser.add_argument("--build-subject", type=str, default="")
+    parser.add_argument("--build-abbrev-hash", type=str, default="")
+    parser.add_argument("--build-author-name", type=str, default="")
+    parser.add_argument("--build-author-email", type=str, default="")
+
+    parser.add_argument("--average-range", type=str, default="5%")
+    parser.add_argument("--average-min-count", type=int, default=3)
 
     args = parser.parse_args()
 
-    dana_url = args.dana_url
-    dana_dataset_id = args.dana_dataset_id
-    build_folder = args.build_folder
+    folder = args.folder
+
+    url = args.url
     project_id = args.project_id
     build_id = args.build_id
 
-    build_info = {
-        "build_hash": args.build_hash,
-        "build_abbrev_hash": args.build_abbrev_hash,
-        "build_author_name": args.build_author_name,
-        "build_author_email": args.build_author_email,
-        "build_subject": args.build_subject,
-        "build_url": args.build_url,
-    }
+    build_url = args.build_url
+    build_hash = args.build_hash
+    build_subject = args.build_subject
+    build_abbrev_hash = args.build_abbrev_hash
+    build_author_name = args.build_author_name
+    build_author_email = args.build_author_email
 
-    AVERAGE_RANGE = 5  # 5 percent
-    AVERAGE_MIN_COUNT = 3  # 3 samples
-    HF_TOKEN = os.environ.get("HF_TOKEN", None)
+    average_range = args.average_range
+    average_min_count = args.average_min_count
+
     API_TOKEN = os.environ.get("API_TOKEN", None)
     ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
 
-    session = Session()
-
-    LOGGER.info("Authenticating to DANA dashboard")
-    authenticate(
-        session=session,
-        dana_url=dana_url,
+    session = login(
+        url=url,
+        api_token=API_TOKEN,
         username=ADMIN_USERNAME,
         password=ADMIN_PASSWORD,
-        api_token=API_TOKEN,
     )
 
-    LOGGER.info("Saving build info")
-    with open(build_folder / "build_info.json", "w") as f:
-        json.dump(build_info, f)
-
-    LOGGER.info("Uploading build folder to HuggingFace Hub")
-    HfApi().upload_folder(
-        repo_id=dana_dataset_id,
-        folder_path=build_folder,  # path to the folder you want to upload
-        path_in_repo=f"{project_id}/{build_id}",
-        delete_patterns="*",  # to rewrite the folder
-        repo_type="dataset",
-        token=HF_TOKEN,
-    )
-
-    LOGGER.info("Publishing build to DANA server")
     publish_build(
+        url=url,
         session=session,
-        dana_url=dana_url,
         api_token=API_TOKEN,
+        folder=folder,
         project_id=project_id,
         build_id=build_id,
-        build_info=build_info,
-        build_folder=build_folder,
-        average_range=AVERAGE_RANGE,
-        average_min_count=AVERAGE_MIN_COUNT,
+        build_url=build_url,
+        build_hash=build_hash,
+        build_subject=build_subject,
+        build_abbrev_hash=build_abbrev_hash,
+        build_author_name=build_author_name,
+        build_author_email=build_author_email,
+        average_range=average_range,
+        average_min_count=average_min_count,
     )
