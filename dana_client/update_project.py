@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 
 from git import Repo
 
-from .api import login, build_exists
+from .api import login, build_exists, project_exists, add_project
 from .build_utils import publish_build, upload_build
 
 
@@ -26,6 +26,21 @@ def update_project(
     """
     Updates a dana project that's monitoring a git repository.
     """
+
+    p_exists = project_exists(
+        url=url,
+        session=session,
+        api_token=api_token,
+        project_id=project_id,
+    )
+    if not p_exists:
+        add_project(
+            url=url,
+            session=session,
+            api_token=api_token,
+            project_id=project_id,
+            override=True,
+        )
 
     try:
         repo = Repo.clone_from(watch_repo, "watch_repo")

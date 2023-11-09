@@ -69,8 +69,8 @@ def login(
 
 
 def add_project(
-    session: Session,
     url: str,
+    session: Session,
     api_token: str,
     project_id: str,
     users: str = "",
@@ -204,8 +204,8 @@ def add_sample(
 
 
 def project_exists(
-    session: Session,
     url: str,
+    session: Session,
     api_token: str,
     project_id: str,
 ) -> bool:
@@ -225,8 +225,8 @@ def project_exists(
 
 
 def build_exists(
-    session: Session,
     url: str,
+    session: Session,
     api_token: str,
     project_id: str,
     build_id: str,
