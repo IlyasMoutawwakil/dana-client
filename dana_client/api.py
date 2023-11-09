@@ -240,9 +240,8 @@ def build_exists(
         api_token=api_token,
         payload=build_payload,
     )
-    build_response = build_response.json()
-
-    if len(build_response) > 0:
-        return True
-    else:
+    try:
+        build_response = build_response.json()
+        return len(build_response) > 0
+    except Exception:
         return False
