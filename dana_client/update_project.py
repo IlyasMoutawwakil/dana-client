@@ -19,7 +19,7 @@ def update_project(
     project_id: str,
     watch_repo: str,
     num_commits: int = 10,
-    average_range: int = 5,
+    average_range: str = "5%",
     average_min_count: int = 3,
 ):
     """
