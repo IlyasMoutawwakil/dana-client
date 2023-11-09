@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 from huggingface_hub import snapshot_download
 
 from .api import login
-from .publish_build import publish_build
+from .build_utils import publish_build
 
 
 def publish_backup(

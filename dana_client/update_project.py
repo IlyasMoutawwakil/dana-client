@@ -7,8 +7,7 @@ from argparse import ArgumentParser
 from git import Repo
 
 from .api import login, build_exists
-from .publish_build import publish_build
-from .upload_build import upload_build
+from .build_utils import publish_build, upload_build
 
 
 def update_project(

@@ -1,12 +1,52 @@
 import os
+import json
 from pathlib import Path
 from requests import Session
 from argparse import ArgumentParser
 
+from huggingface_hub import HfApi
 from omegaconf import OmegaConf
 import pandas as pd
 
-from .api import login, add_project, add_build, add_series, add_sample, project_exists
+from .api import add_project, add_build, add_series, add_sample, project_exists
+
+
+def upload_build(
+    folder: Path,
+    dataset_id: str,
+    hf_token: str,
+    project_id: str,
+    build_id: int,
+    build_url: str,
+    build_hash: str,
+    build_abbrev_hash: str,
+    build_author_name: str,
+    build_author_email: str,
+    build_subject: str,
+) -> None:
+    """
+    Uploads the folder to the HuggingFace dataset.
+    """
+    build_info = {
+        "build_url": build_url,
+        "build_hash": build_hash,
+        "build_subject": build_subject,
+        "build_abbrev_hash": build_abbrev_hash,
+        "build_author_name": build_author_name,
+        "build_author_email": build_author_email,
+    }
+
+    with open(folder / "build_info.json", "w") as f:
+        json.dump(build_info, f)
+
+    HfApi().upload_folder(
+        repo_id=dataset_id,
+        folder_path=folder,  # path to the folder you want to upload
+        path_in_repo=f"{project_id}/{build_id}",
+        delete_patterns="*",  # to rewrite the folder
+        repo_type="dataset",
+        token=hf_token,
+    )
 
 
 def publish_build(
@@ -160,69 +200,3 @@ def publish_build(
                 sample_unit="tokens",
                 override=True,
             )
-
-
-def main():
-    parser = ArgumentParser()
-
-    parser.add_argument("--folder", type=Path, required=True)
-
-    parser.add_argument("--url", type=str, required=True)
-    parser.add_argument("--project-id", type=str, required=True)
-    parser.add_argument("--build-id", type=int, required=True)
-
-    parser.add_argument("--build-url", type=str, default="")
-    parser.add_argument("--build-hash", type=str, default="")
-    parser.add_argument("--build-subject", type=str, default="")
-    parser.add_argument("--build-abbrev-hash", type=str, default="")
-    parser.add_argument("--build-author-name", type=str, default="")
-    parser.add_argument("--build-author-email", type=str, default="")
-
-    parser.add_argument("--average-range", type=str, default="5%")
-    parser.add_argument("--average-min-count", type=int, default=3)
-
-    args = parser.parse_args()
-
-    folder = args.folder
-
-    url = args.url
-    project_id = args.project_id
-    build_id = args.build_id
-
-    build_url = args.build_url
-    build_hash = args.build_hash
-    build_subject = args.build_subject
-    build_abbrev_hash = args.build_abbrev_hash
-    build_author_name = args.build_author_name
-    build_author_email = args.build_author_email
-
-    average_range = args.average_range
-    average_min_count = args.average_min_count
-
-    API_TOKEN = os.environ.get("API_TOKEN", None)
-    ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
-
-    session = login(
-        url=url,
-        api_token=API_TOKEN,
-        username=ADMIN_USERNAME,
-        password=ADMIN_PASSWORD,
-    )
-
-    publish_build(
-        url=url,
-        session=session,
-        api_token=API_TOKEN,
-        folder=folder,
-        project_id=project_id,
-        build_id=build_id,
-        build_url=build_url,
-        build_hash=build_hash,
-        build_subject=build_subject,
-        build_abbrev_hash=build_abbrev_hash,
-        build_author_name=build_author_name,
-        build_author_email=build_author_email,
-        average_range=average_range,
-        average_min_count=average_min_count,
-    )
