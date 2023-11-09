@@ -93,7 +93,7 @@ def update_project(
 
         # upload the build
         upload_build(
-            folder="experiments",
+            folder=Path("experiments"),
             dataset_id=dataset_id,
             hf_token=hf_token,
             project_id=project_id,

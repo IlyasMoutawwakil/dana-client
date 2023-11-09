@@ -6,7 +6,7 @@ from .api import add_project, add_build, add_series, add_sample, project_exists
 
 import pandas as pd
 from omegaconf import OmegaConf
-from huggingface_hub import logging
+from huggingface_hub import logging, HfApi
 from huggingface_hub.utils import disable_progress_bars
 
 disable_progress_bars()
@@ -38,8 +38,7 @@ def upload_build(
         "build_author_email": build_author_email,
     }
 
-    with open(folder / "build_info.json", "w") as f:
-        json.dump(build_info, f)
+    json.dump(build_info, open(folder / "build_info.json", "w"))
 
     HfApi().upload_folder(
         repo_id=dataset_id,
