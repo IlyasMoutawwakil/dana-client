@@ -44,8 +44,8 @@ def publish_backup(
             publish_build(
                 folder=build_path,
                 url=url,
-                token=api_token,
                 session=session,
+                api_token=api_token,
                 project_id=project_id,
                 build_id=build_id,
                 build_url=build_info["build_url"],
