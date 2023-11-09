@@ -1,6 +1,7 @@
 # Dana Client
 
-Dana Client is an HTTP client for [Dana Server](https://github.com/IlyasMoutawwakil/dana-server).
+A 
+Dana Client is a Python HTTP client to interact with a [Dana Server](https://github.com/IlyasMoutawwakil/dana-server) and publish benchmarks to it.
 
 ## Installation
 
@@ -10,8 +11,8 @@ pip install -e .
 
 # Usage
 
-`dana_client.api` contains most of the functionalities of the client like login, adding a project, series, etc.
-`dana_client.build_utils` contains utilities for publishing and uploading a build folder (benchmark results).
+`dana_client.api` contains the basic functionalities of the client like login, adding a project, series, etc.
+`dana_client.build_utils` contains functions for publishing and uploading a benchmarks.
 
 ## Commands
 
