@@ -5,9 +5,14 @@ from requests import Session
 from argparse import ArgumentParser
 
 from huggingface_hub import snapshot_download
+from huggingface_hub import logging
+
 
 from .api import login
 from .build_utils import publish_build
+
+logging.set_verbosity_error()
+logging.set_verbosity_warning()
 
 
 def publish_backup(
