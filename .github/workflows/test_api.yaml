@@ -17,8 +17,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set up dana server
+      - name: Set up Node
         uses: actions/setup-node@v3
+      
+      - name: Set up API
         run: |
           git clone https://github.com/IlyasMoutawwakil/dana-server.git
           cd dana-server
@@ -27,6 +29,8 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v3
+      
+      - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install pytest
