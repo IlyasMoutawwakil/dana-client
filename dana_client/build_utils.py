@@ -50,10 +50,10 @@ def upload_build(
 
 
 def publish_build(
+    folder: Path,
     url: str,
     session: Session,
     api_token: str,
-    folder: Path,
     project_id: str,
     build_id: int,
     build_url: str = "",
@@ -65,6 +65,9 @@ def publish_build(
     average_range: str = "5%",
     average_min_count: int = 3,
 ) -> None:
+    """
+    Publishes the build to the Dana Server.
+    """
     p_exists = project_exists(
         session=session,
         url=url,

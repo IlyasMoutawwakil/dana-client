@@ -11,6 +11,7 @@ pip install -e .
 # Usage
 
 `dana_client.api` contains most of the functionalities of the client like login, adding a project, series, etc.
+`dana_client.build_utils` contains utilities for publishing and uploading a build folder (benchmark results).
 
 ## Commands
 

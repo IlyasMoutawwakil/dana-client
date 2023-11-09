@@ -39,6 +39,8 @@ def publish_backup(
             build_id = int(build_path.name)
 
             build_info = json.load(open(build_path / "build_info.json"))
+
+            # publish the build
             publish_build(
                 folder=build_path,
                 url=url,
