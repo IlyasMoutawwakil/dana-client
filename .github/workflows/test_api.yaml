@@ -1,4 +1,4 @@
-name: Test Client
+name: Test API
 
 on:
   push:
@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_api:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,7 +19,7 @@ jobs:
 
       - name: Set up Node
         uses: actions/setup-node@v3
-      
+
       - name: Set up API
         run: |
           git clone https://github.com/IlyasMoutawwakil/dana-server.git
@@ -29,13 +29,17 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v3
-      
+
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install pytest
           pip install -e .
 
+  test_api:
+    runs-on: ubuntu-latest
+    needs: setup_env
+    steps:
       - name: Run API tests
         run: |
           pytest tests/test_api.py
