@@ -1,14 +1,16 @@
-import os
 import json
 from pathlib import Path
 from requests import Session
-from argparse import ArgumentParser
-
-from huggingface_hub import HfApi
-from omegaconf import OmegaConf
-import pandas as pd
 
 from .api import add_project, add_build, add_series, add_sample, project_exists
+
+import pandas as pd
+from omegaconf import OmegaConf
+from huggingface_hub import logging
+from huggingface_hub.utils import disable_progress_bars
+
+disable_progress_bars()
+logging.set_verbosity_warning()
 
 
 def upload_build(

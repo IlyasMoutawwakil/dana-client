@@ -4,14 +4,13 @@ from pathlib import Path
 from requests import Session
 from argparse import ArgumentParser
 
-from huggingface_hub import snapshot_download, logging
-from huggingface_hub.utils import disable_progress_bars
-
 from .api import login
 from .build_utils import publish_build
 
+from huggingface_hub import snapshot_download, logging
+from huggingface_hub.utils import disable_progress_bars
+
 disable_progress_bars()
-logging.set_verbosity_error()
 logging.set_verbosity_warning()
 
 
