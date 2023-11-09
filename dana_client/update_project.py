@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+from pathlib import Path
 from requests import Session
 from argparse import ArgumentParser
 
@@ -19,7 +20,7 @@ def update_project(
     project_id: str,
     watch_repo: str,
     num_commits: int = 10,
-    average_range: int = 5,
+    average_range: str = "5%",
     average_min_count: int = 3,
 ):
     """
@@ -40,7 +41,7 @@ def update_project(
         b_exists = build_exists(
             url=url,
             session=session,
-            token=api_token,
+            api_token=api_token,
             project_id=project_id,
             build_id=build_id,
         )
@@ -107,9 +108,10 @@ def update_project(
 
         # publish the build
         publish_build(
-            folder="experiments",
+            folder=Path("experiments"),
             url=url,
-            dataset_id=dataset_id,
+            session=session,
+            api_token=api_token,
             project_id=project_id,
             build_id=build_id,
             build_url=build_url,
@@ -118,7 +120,6 @@ def update_project(
             build_abbrev_hash=build_abbrev_hash,
             build_author_name=build_author_name,
             build_author_email=build_author_email,
-            build_folder="experiments",
             average_range=average_range,
             average_min_count=average_min_count,
         )
@@ -134,7 +135,7 @@ def main():
     parser.add_argument("--project-id", type=str, required=True)
     parser.add_argument("--watch-repo", type=str, required=True)
     parser.add_argument("--num-commits", type=int, default=10)
-    parser.add_argument("--average-range", type=int, default=5)
+    parser.add_argument("--average-range", type=str, default="5%")
     parser.add_argument("--average-min-count", type=int, default=3)
 
     args = parser.parse_args()
