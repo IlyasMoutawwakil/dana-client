@@ -1,4 +1,4 @@
-name: Test Publishing a Build
+name: Test Build Utils
 
 on:
   push:
@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_publish_build:
+  test_build_utils:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,9 +39,9 @@ jobs:
           pip install pytest
           pip install -e .
 
-      - name: Run test benchmark
+      - name: Run a benchmark
         run: optimum-benchmark --config-dir tests --config-name config --multirun
 
-      - name: Run API tests
+      - name: Run tests
         run: |
-          pytest tests/test_publish_build.py
+          pytest tests/test_build_utils.py

@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from dana_client.api import login, build_exists
-from dana_client.build_utils import publish_build
+from dana_client.build_utils import publish_build, upload_build
 
 FOLDER = Path("experiments")
 URL = "http://localhost:7000"
@@ -17,7 +17,6 @@ ADMIN_PASSWORD = "admin"
 
 
 def test_publish_build():
-    
     session = login(
         url=URL,
         api_token=API_TOKEN,
