@@ -137,7 +137,7 @@ def main():
     parser.add_argument("--project-id", type=str, required=True)
     parser.add_argument("--watch-repo", type=str, required=True)
     parser.add_argument("--num-commits", type=int, default=10)
-    parser.add_argument("--average-range", type=int, default=5)
+    parser.add_argument("--average-range", type=str, default="5%")
     parser.add_argument("--average-min-count", type=int, default=3)
 
     args = parser.parse_args()
