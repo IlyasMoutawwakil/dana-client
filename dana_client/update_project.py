@@ -44,12 +44,10 @@ def update_project(
         )
 
     try:
-        print("Cloning repo...")
         repo = Repo.clone_from(watch_repo, "watch_repo")
     except Exception:
         repo = Repo("watch_repo")
 
-    print("Retrieving commits...")
     commits = repo.iter_commits("main", max_count=num_commits)
 
     for commit in commits:
@@ -64,7 +62,6 @@ def update_project(
             build_id=build_id,
         )
         if b_exists:
-            print(f"Build {build_id} exists, skipping...")
             continue
 
         # get build info
@@ -77,7 +74,6 @@ def update_project(
 
         repo.git.checkout(build_hash)
         # run the install command and omit stdout (devnull)
-        print(f"Installing commit {build_abbrev_hash}...")
         out = subprocess.run(
             ["pip", "install", "-e", "watch_repo"],
             stdout=subprocess.DEVNULL if not debug else None,
@@ -158,7 +154,7 @@ def main():
     parser.add_argument("--num-commits", type=int, default=10)
     parser.add_argument("--average-range", type=str, default="5%")
     parser.add_argument("--average-min-count", type=int, default=3)
-    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--debug", action="store_true", default=False)
 
     args = parser.parse_args()
 
