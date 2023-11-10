@@ -81,7 +81,7 @@ def update_project(
         )
 
         if out.returncode != 0:
-            raise Exception("Install failed!")
+            raise RuntimeError("Install failed!")
 
         # run the benchmarks
         for config_file in os.listdir("benchmarks"):
@@ -104,6 +104,9 @@ def update_project(
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.STDOUT,
             )
+            
+            if out.returncode != 0:
+                raise RuntimeError("Benchmark failed!")
 
         # upload the build
         upload_build(
