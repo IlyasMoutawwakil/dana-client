@@ -22,6 +22,7 @@ def update_project(
     num_commits: int = 10,
     average_range: str = "5%",
     average_min_count: int = 3,
+    debug: bool = False,
 ):
     """
     Updates a dana project that's monitoring a git repository.
@@ -43,10 +44,12 @@ def update_project(
         )
 
     try:
+        print("Cloning repo...")
         repo = Repo.clone_from(watch_repo, "watch_repo")
     except Exception:
         repo = Repo("watch_repo")
 
+    print("Retrieving commits...")
     commits = repo.iter_commits("main", max_count=num_commits)
 
     for commit in commits:
@@ -74,10 +77,11 @@ def update_project(
 
         repo.git.checkout(build_hash)
         # run the install command and omit stdout (devnull)
+        print(f"Installing commit {build_abbrev_hash}...")
         out = subprocess.run(
             ["pip", "install", "-e", "watch_repo"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
+            stdout=subprocess.DEVNULL if not debug else None,
+            stderr=subprocess.STDOUT if not debug else None,
         )
 
         if out.returncode != 0:
@@ -101,10 +105,10 @@ def update_project(
                     config_name,
                     "--multirun",
                 ],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.STDOUT,
+                stdout=subprocess.DEVNULL if not debug else None,
+                stderr=subprocess.STDOUT if not debug else None,
             )
-            
+
             if out.returncode != 0:
                 raise RuntimeError("Benchmark failed!")
 
@@ -154,6 +158,7 @@ def main():
     parser.add_argument("--num-commits", type=int, default=10)
     parser.add_argument("--average-range", type=str, default="5%")
     parser.add_argument("--average-min-count", type=int, default=3)
+    parser.add_argument("--debug", action="store_true")
 
     args = parser.parse_args()
 
@@ -164,6 +169,7 @@ def main():
     num_commits = args.num_commits
     average_range = args.average_range
     average_min_count = args.average_min_count
+    debug = args.debug
 
     HF_TOKEN = os.environ.get("HF_TOKEN", None)
     API_TOKEN = os.environ.get("API_TOKEN", None)
@@ -188,4 +194,5 @@ def main():
         num_commits=num_commits,
         average_range=average_range,
         average_min_count=average_min_count,
+        debug=debug,
     )
