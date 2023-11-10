@@ -72,12 +72,11 @@ def update_project(
         build_subject = commit.message
         build_url = f"{watch_repo}/commit/{commit}"
 
-        # checkout the commit and install the watch_repo library
         repo.git.checkout(build_hash)
-        # run the install command and send output to benchmarks/install.log
+        # run the install command and omit stdout (devnull)
         out = subprocess.run(
             ["pip", "install", "-e", "watch_repo"],
-            stdout=open("benchmarks/install.log", "w"),
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
         )
 
